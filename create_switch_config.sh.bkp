@@ -1,0 +1,83 @@
+#!/bin/sh
+
+#Info
+#====
+#	file: create_switch_config
+# 	name: DIP switch configuration
+#
+#	version: 1.0
+# 		*version is major.minor format
+# 		*major is update when new capability is added
+# 		*minor is update on fixes & improvementsements
+#
+#History
+#=======
+#
+# 	08Mar2017 v1.00
+#		Dread Pirate( jason.roberts.14@us.af.mil )
+#		*Created to automate DIP switch setup on RHEL-7 for network connectivity
+#
+#Description
+#===========
+#	Script to generate new switch configuration files after an update has accured in initial config
+#
+#Notes
+#=====
+#
+#
+######################
+#Script Variables
+SWITCH_BASE_FILE=./Switch_101.master
+# Number of files you want to create:
+FILESMAX=17
+
+######################
+Tunnel_Config() 
+{
+sed -i 's/interface Tunnel.*/interface Tunnel'"$STARTINGIP"'/g' Switch_1*$STARTINGIP
+sed -i 's/ip address 10\.10\.10\..* 255\.255\.255\.252/ip address 10\.10\.10\.'"$TUNNEL_IP_SOURCE"' 255.255.255.252/g' Switch_1*$STARTINGIP
+sed -i 's/tunnel destination 10\.10\.10\..*/tunnel destination 10\.10\.10\.'"$TUNNEL_IP_DEST"'/g' Switch_1*$STARTINGIP
+}
+OSPF_Config() 
+{
+sed -i 's/network 10\.10\.10\..* 0\.0\.0\.0/network 10\.10\.10\.'"$TUNNEL_IP_SOURCE"' 0\.0\.0\.0/g' Switch_1*$STARTINGIP
+}
+COUNTER=0
+STARTINGIP=2
+CASENAME=({3,6}{A,B,C}{1,2,3}A) ###This Array contains the DIP cases for the switch names eg 3A1A, 6C2A, etc.
+CASEPOS=1 ###This is which position of the CASENAME to take a name from since 3A1A starts at array 0 not array 1. 
+while [ $COUNTER -lt $FILESMAX ]; do
+	if [ $STARTINGIP -lt 10 ]; then 
+		cp $SWITCH_BASE_FILE Switch_10$STARTINGIP
+		echo "Created file:   Switch_10$STARTINGIP"
+		sed -i 's/101/10'"$STARTINGIP"'/g' Switch_10$STARTINGIP
+		sed -i s/DIP_10"$STARTINGIP".*/DIP_10"$STARTINGIP"_"${CASENAME[$CASEPOS]}"/ Switch_10$STARTINGIP ###Sets hostname by IP/DIP case.
+		sed -i s/132/"$STARTINGIP"32/g Switch_10$STARTINGIP ###This replaces VLAN 132 with the appropriate switch VLAN.		
+		sed -i s/135/"$STARTINGIP"35/g Switch_10$STARTINGIP ###This replaces VLAN 135 with the appropriate switch VLAN.		
+		sed -i s/136/"$STARTINGIP"36/g Switch_10$STARTINGIP ###This replaces VLAN 136 with the appropriate switch VLAN.		
+		sed -i s/137/"$STARTINGIP"37/g Switch_10$STARTINGIP ###This replaces VLAN 137 with the appropriate switch VLAN.
+	elif [ $STARTINGIP -gt 9 ]; then
+		cp $SWITCH_BASE_FILE Switch_1$STARTINGIP
+		echo "Created file:   Switch_1$STARTINGIP"
+		sed -i 's/101/1'"$STARTINGIP"'/g' Switch_1$STARTINGIP
+		sed -i s/DIP_1"$STARTINGIP".*/DIP_1"$STARTINGIP"_"${CASENAME[$CASEPOS]}"/ Switch_1$STARTINGIP ###Sets hostname by IP/DIP case.
+		sed -i s/132/"$STARTINGIP"32/g Switch_1$STARTINGIP ###This replaces VLAN 132 with the appropriate switch VLAN.		
+		sed -i s/135/"$STARTINGIP"35/g Switch_1$STARTINGIP ###This replaces VLAN 135 with the appropriate switch VLAN.		
+		sed -i s/136/"$STARTINGIP"36/g Switch_1$STARTINGIP ###This replaces VLAN 136 with the appropriate switch VLAN.		
+		sed -i s/137/"$STARTINGIP"37/g Switch_1$STARTINGIP ###This replaces VLAN 137 with the appropriate switch VLAN.
+	fi
+
+	if [ $STARTINGIP -lt 19 ]; then
+		TUNNEL_IP_SOURCE=$(expr 4 \* $STARTINGIP - 2)
+		TUNNEL_IP_DEST=$(expr $TUNNEL_IP_SOURCE - 1)
+		Tunnel_Config
+		OSPF_Config
+	else
+		echo ""
+		echo "NO TUNNEL CONFIGURATION OR OSPF CONFIGURATION HAS BEEN CREATED for file Switch_10$STARTINGIP"
+		echo ""	
+	fi	
+	let "STARTINGIP=STARTINGIP+1"
+	let "COUNTER=COUNTER+1"
+	let "CASEPOS=CASEPOS+1"
+done
