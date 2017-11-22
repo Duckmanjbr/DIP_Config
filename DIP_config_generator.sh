@@ -5,7 +5,7 @@
 #	File: DIP_config_generator.sh
 #	Name: Create DIP Configurations
 #
-	VERSION_NUM='3.0'
+	VERSION_NUM='3.1'
 # 	*Version is major.minor format
 # 	*Major is updated when new capability is added
 # 	*Minor is updated on fixes and improvements
@@ -33,11 +33,12 @@
 #	22Nov2017 v3.1
 #		Dread Pirate
 #		*Added squadron variables for ease of use between multiple sqds.
+#		*Other small bug fixes
 #
 #Description 
 #=======================
 # This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
-#
+# This will allow two Sqds (18 kits) to use the same backbone infrastructure in parallel while maintaining kit isolation by VLAN.
 #
 #Notes
 #=======================
@@ -49,6 +50,8 @@ SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4"
 SQD1NAME='Ravens'				### Sqd 1 name.
 SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4".  Only use one number!
 SQD2NAME='Warriors'				### Sqd 2 name.
+#Base files will be stored in a parent folder labeled ESXi,Firewall,Switch,etc
+#Newly created configuration files will be created in a folder with the name of the kit configs created.  Ex: "Kit_5"
 FIRE_BASE_FILE='firewall.base.xml'              ### Baseline file to create all others from
 FIRE_FILE='firewall'                            ### Name of config file to create
 PFSENSE_BACKUP="config-firewall.dmss-2"         ### Name of the backup file as exported from pfSense
@@ -61,7 +64,7 @@ KIT=''                                          ### Kit number (1-18)
 FILE=''                                         ### File being adjusted
 IP=''                                           ### IP octet of kit (101, 102, 103, etc)
 OPTION=''                                       ### Prompted question options
-CASENAME=({3,6}{A,B,C}{1,2,3}A)                 ### This Array contains the DIP cases for the switch names eg 3A1A, 6C2A, etc.
+CASENAME=({$SDQ1,$SQD2}{A,B,C}{1,2,3}A)                 ### This Array contains the DIP cases for the switch names eg 3A1A, 6C2A, etc.
 CASE=''                                         ### The Case name based from the kit number and the array.
 TUNNEL_IP_SOURCE=''                             ### Tunnel IPs
 TUNNEL_IP_DEST=''                               ### Tunnel IPs
@@ -106,33 +109,28 @@ Mainmenu()
 Header
 	echo "+        [ 1 ] Create ESXi config for single kit                       +"
 	echo "+                                                                      +"
-	echo "+                                                                      +"
 	echo "+        [ 2 ] Create Firewall config for single kit                   +"
 	echo "+                                                                      +"
-	echo "+                                                                      +"
-	echo "+        [ 3 ] Create new esx.base.conf from backup file               +"
-	echo "+                                                                      +"
-	echo "+                                                                      +"
-	echo "+        [ 4 ] Create new firewall.base.xml from pfSense backup file   +"
+	echo "+        [ 3 ] Create new switch config from master file               +"
 	echo "+                                                                      +"
 	echo "+                                                                      +"
-	echo "+        [ 5 ] Create new switch config from master file               +"
-	echo "+                                                                      +"
-	echo "+                                                                      +"
-	echo "+                                                                      +"
-	echo "+        [ F ] Fast Setup Configuration (Firewall,ESXi,Switch)         +"
+	echo "+      **[ F ] Fast Setup Configuration (Firewall,ESXi,Switch)**       +"
 	echo "+                                                                      +"
 	echo "+                                                                      +"
 	echo "+        [ X ] Exit Script                                             +"
+	echo "+                                                                      +"
+	echo "+                                                                      +"
+	echo "+        [ 4 ] Create new firewall.base.xml from pfSense backup file   +"
+	echo "+        [ 5 ] Create new esx.base.conf from backup file               +"
 Footer
 	read -p "Please make a Selection: " mainmenu_option
 	case $mainmenu_option in
-		1) clear && File_check BE && Kits && Create_esx-config && Mainmenu;;
-		2) clear && File_check BF && Kits && Create_fire-config && Mainmenu;; 
-		3) clear && File_check E && Create_esx-base_file && Mainmenu;;
+		1) clear && File_check BE && Kits && Create_esx-config && Continue && Mainmenu;;
+		2) clear && File_check BF && Kits && Create_fire-config && Continue && Mainmenu;; 
+		3) clear && File_check S && Kits && Create_switch_config && Continue && Mainmenu;;
 		4) clear && File_check PB && Create_fire-base_file && Mainmenu;;
-		5) clear && File_check S && Kits && Create_switch_config && Mainmenu;;
-		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Mainmenu;;
+		5) clear && File_check E && Create_esx-base_file && Mainmenu;;
+		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Continue && Mainmenu;;
 		x|X) clear && exit ;;
 		*) echo "Invalid input" && sleep 1 && Mainmenu;;
 	esac
@@ -187,7 +185,7 @@ elif [ $1 = 'PB' ];then
 		FILE=${PFSENSE_BACKUP}
 	fi
 elif [ $1 = 'S' ];then
-	FILE=Switches/${SWITCH_BASE_FILE}
+	FILE=Switch/${SWITCH_BASE_FILE}
 elif [ -z $1 ];then
 	echo "There was an error on file checking. Argument is empty."
 	sleep 1
@@ -216,17 +214,18 @@ Create_esx-config()
 #Restore:
 # vim-cmd hostsvc/maintenance_mode_enter
 # vim-cmd hostsvc/firmware/restore_config 1 /tmp/configBundle.tgz
-read -p "Are you setting up primary ESXi or secondary? (p/s)  " OPTION -r
+read -p "Are you setting up primary ESXi or secondary? (p/s)  " OPTION
 mkdir -p Kit_${KIT}
 if [[ $OPTION = "p" ]];then
-	sed -r "s/10\.101\./10\.${IP}\./" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+	sed -r "s/10\.101\./10\.${IP}\./g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
 elif [[ $OPTION = "s" ]];then
-        sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+        sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
 fi
-sed -i "s/132/${KIT}32/" Kit_${KIT}/$ESX_FILE
-sed -i "s/135/${KIT}35/" Kit_${KIT}/$ESX_FILE
-sed -i "s/136/${KIT}36/" Kit_${KIT}/$ESX_FILE
-sed -i "s/137/${KIT}37/" Kit_${KIT}/$ESX_FILE
+sed -i "s/132/${KIT}32/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Management VLAN
+sed -i "s/134/${KIT}34/g" Kit_${KIT}/$ESX_FILE  ### Corrects the VoIP VLAN
+sed -i "s/135/${KIT}35/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Internal VLAN
+sed -i "s/136/${KIT}36/g" Kit_${KIT}/$ESX_FILE  ### Corrects the External VLAN
+sed -i "s/137/${KIT}37/g" Kit_${KIT}/$ESX_FILE  ### Corrects the DMZ VLAN
 echo '' 
 echo '[+] Generated esx.conf'
 echo ''
@@ -236,26 +235,27 @@ echo 'Also turn on Maintenance Mode in Host->Actions '
 echo ''
 echo 'From MIP: scp esx.conf user@<IP>://etc/vmware/ '
 echo 'Reboot the server.      '
-Continue
 }
 #=======================
 Create_fire-config()
 {
 # Create new config based off baseline file
 mkdir -p Kit_${KIT}
-sed -r "s/10\.101\./10\.${IP}\./" Firewall/${FIRE_BASE_FILE} > Kit_${KIT}/${FIRE_FILE}.${IP}.xml
+sed -r s/10\.101\./10\.${IP}\./g Firewall/${FIRE_BASE_FILE} > Kit_${KIT}/${FIRE_FILE}.${IP}.xml
 echo "[+] Generated ${FIRE_FILE}.${IP}.xml"
-Continue
 }
 #=======================
 Create_esx-base_file()
 {
 #Create a baseline file from a esx.conf
-sed -r "s/10\.1([0,1][0-8])\.32\.[2,4]/10\.101\.32\.2/" $ESX_FILE > $ESX_BASE_FILE
-sed -i "s/vlanId\s=\s\"*[0-8]32\"/vlanId = \"132\"/" $ESX_BASE_FILE
-sed -i "s/vlanId\s=\s\"*[0-8]35\"/vlanId = \"135\"/" $ESX_BASE_FILE
-sed -i "s/vlanId\s=\s\"*[0-8]36\"/vlanId = \"136\"/" $ESX_BASE_FILE
-sed -i "s/vlanId\s=\s\"*[0-8]37\"/vlanId = \"137\"/" $ESX_BASE_FILE
+sed -r "s/10\.1([0,1][0-8])\.32\.[2,4]/10\.101\.32\.2/g" $ESX_FILE > $ESX_BASE_FILE
+sed -ri "s/10\.1([0,1][0-8])\./10\.101\./g" $ESX_BASE_FILE
+sed -i "s/vlanId\s=\s\"*[0-8]32\"/vlanId = \"132\"/g" $ESX_BASE_FILE  ### Corrects the Management VLAN
+sed -i "s/vlanId\s=\s\"*[0-8]34\"/vlanId = \"134\"/g" $ESX_BASE_FILE  ### Corrects the VoIP VLAN
+sed -i "s/vlanId\s=\s\"*[0-8]35\"/vlanId = \"135\"/g" $ESX_BASE_FILE  ### Corrects the Internal VLAN
+sed -i "s/vlanId\s=\s\"*[0-8]36\"/vlanId = \"136\"/g" $ESX_BASE_FILE  ### Corrects the External VLAN
+sed -i "s/vlanId\s=\s\"*[0-8]37\"/vlanId = \"137\"/g" $ESX_BASE_FILE  ### Corrects the DMZ VLAN
+chown -f assessor $ESX_BASE_FILE
 echo "[+] Generated $ESX_BASE_FILE"
 Continue
 }
@@ -263,11 +263,14 @@ Continue
 Create_fire-base_file()
 {
 #Create baseline file from pfSense backup .xml file.
-sed -r "s/10\.1([0,1][0-9])\./10\.101\./" ${PFSENSE_BACKUP}* > $FIRE_BASE_FILE
-sed -i "s/10\.101\.32\.3/10\.101\.32\.1/" $FIRE_BASE_FILE
-sed -i "s/10\.101\.35\.3/10\.101\.35\.1/" $FIRE_BASE_FILE
-sed -i "s/10\.101\.36\.3/10\.101\.36\.1/" $FIRE_BASE_FILE
-sed -i "s/10\.101\.37\.3/10\.101\.37\.1/" $FIRE_BASE_FILE
+sed -r "s/10\.1([0,1][0-8])\./10\.101\./g" ${PFSENSE_BACKUP}* > $FIRE_BASE_FILE
+sed -i "s/10\.101\.32\.3/10\.101\.32\.1/g" $FIRE_BASE_FILE  ### Corrects the Management VLAN
+sed -i "s/10\.101\.34\.3/10\.101\.34\.1/g" $FIRE_BASE_FILE  ### Corrects the VoIP VLAN
+sed -i "s/10\.101\.35\.3/10\.101\.35\.1/g" $FIRE_BASE_FILE  ### Corrects the Internal VLAN
+sed -i "s/10\.101\.36\.3/10\.101\.36\.1/g" $FIRE_BASE_FILE  ### Corrects the External VLAN
+sed -i "s/10\.101\.37\.3/10\.101\.37\.1/g" $FIRE_BASE_FILE  ### Corrects the DMZ VLAN
+#sed -i '/<openvpn>/,/<\/openvpn>/{/<openvpn>/!{/\/openvpn>/!d}}' $FIRE_BASE_FILE
+chown -f assessor $FIRE_BASE_FILE
 echo "[+] Generated $FIRE_BASE_FILE"
 Continue
 }
@@ -277,6 +280,7 @@ Continue()
 {
 echo ''
 echo ''
+chown -Rf assessor Kit_${KIT}
 read -p '[Press Enter to continue] '
 }
 #
@@ -293,21 +297,20 @@ sed -i 's/tunnel destination 10\.10\.10\..*/tunnel destination 10\.10\.10\.'"$TU
 Create_switch_config()
 {
 mkdir -p Kit_${KIT}	
-cp Switches/$SWITCH_BASE_FILE Kit_${KIT}/Switch_${IP}
-sed -i s/10\.101/10\.${IP}/g Kit_${KIT}/Switch_${IP}
+cp Switch/$SWITCH_BASE_FILE Kit_${KIT}/Switch_${IP}
+sed -i "s/10\.101/10\.${IP}/g" Kit_${KIT}/Switch_${IP}
 echo ''
-echo "... ${CASE}...2"
-sed -i s/DIP_101_.*/DIP_${IP}_${CASE}/ Kit_${KIT}/Switch_${IP} ###Sets hostname by IP/DIP case.
-sed -i s/132/"${KIT}"32/g Kit_${KIT}/Switch_${IP} ###This replaces VLAN 132 with the appropriate switch VLAN.		
-sed -i s/135/"${KIT}"35/g Kit_${KIT}/Switch_${IP} ###This replaces VLAN 135 with the appropriate switch VLAN.		
-sed -i s/136/"${KIT}"36/g Kit_${KIT}/Switch_${IP} ###This replaces VLAN 136 with the appropriate switch VLAN.		
-sed -i s/137/"${KIT}"37/g Kit_${KIT}/Switch_${IP} ###This replaces VLAN 137 with the appropriate switch VLAN.
+sed -i "s/DIP_101_.*/DIP_${IP}_${CASE}/g" Kit_${KIT}/Switch_${IP} ###Sets hostname by IP/DIP case.
+sed -i "s/132/"${KIT}"32/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 132 with the appropriate switch VLAN.		
+sed -i "s/134/"${KIT}"34/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 134 with the appropriate switch VLAN.
+sed -i "s/135/"${KIT}"35/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 135 with the appropriate switch VLAN.		
+sed -i "s/136/"${KIT}"36/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 136 with the appropriate switch VLAN.		
+sed -i "s/137/"${KIT}"37/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 137 with the appropriate switch VLAN.
 #TUNNEL_IP_SOURCE=$(expr 4 \* ${IP} - 2)
 #TUNNEL_IP_DEST=$(expr $TUNNEL_IP_SOURCE - 1)
 #Tunnel_Config
 echo ''
 echo "[+] Generated Switch_${IP}"
-Continue
 }
 #
 ####################################################
