@@ -30,6 +30,9 @@
 #		Dread Pirate
 #		*Incorporated switch config creation to start streamlining the process. 
 #
+#	22Nov2017 v3.1
+#		Dread Pirate
+#		*Added squadron variables for ease of use between multiple sqds.
 #
 #Description 
 #=======================
@@ -42,6 +45,10 @@
 #
 #####################################################
 #Variables
+SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4".  Only use one number!
+SQD1NAME='Ravens'				### Sqd 1 name.
+SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4".  Only use one number!
+SQD2NAME='Warriors'				### Sqd 2 name.
 FIRE_BASE_FILE='firewall.base.xml'              ### Baseline file to create all others from
 FIRE_FILE='firewall'                            ### Name of config file to create
 PFSENSE_BACKUP="config-firewall.dmss-2"         ### Name of the backup file as exported from pfSense
@@ -138,18 +145,18 @@ Header
 	echo "+    This number schema repeats throughout the kits and networks       +"
 	echo "+                                                                      +"
 	echo "+                                                                      +"
-	echo "+                 ============ Ravens =============                    +"
+	echo "+                 ============ $SQD1NAME =============                    +"
 	echo "+              DOA              DOB                DOC                 +"
-	echo "+          3A1x   101       3B1x   104         3C1x   107              +"
-	echo "+          3A2x   102       3B2x   105         3C2x   108              +"
-	echo "+          3A3x   103       3B3x   106         3C3x   109              +"
+	echo "+          ${SQD1}A1x   101       ${SQD1}B1x   104         ${SQD1}C1x   107              +"
+	echo "+          ${SQD1}A2x   102       ${SQD1}B2x   105         ${SQD1}C2x   108              +"
+	echo "+          ${SQD1}A3x   103       ${SQD1}B3x   106         ${SQD1}C3x   109              +"
 	echo "+                                                                      +"
 	echo "+                                                                      +"
-	echo "+                 =========== Warriors ============                    +"
+	echo "+                 =========== $SQD2NAME ============                    +"
 	echo "+              DOA              DOB                DOC                 +"
-	echo "+          6A1x   110       6B1x   113         6C1x   116              +"
-	echo "+          6A2x   111       6B2x   114         6C2x   117              +"
-	echo "+          6A3x   112       6B3x   115         6C3x   118              +"
+	echo "+          ${SQD2}A1x   110       ${SQD2}B1x   113         ${SQD2}C1x   116              +"
+	echo "+          ${SQD2}A2x   111       ${SQD2}B2x   114         ${SQD2}C2x   117              +"
+	echo "+          ${SQD2}A3x   112       ${SQD2}B3x   115         ${SQD2}C3x   118              +"
 Footer
 #
 read -p "What kit number are you configuring? [ex: 101,105,116,etc]  " IP
