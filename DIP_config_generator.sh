@@ -125,12 +125,12 @@ Header
 Footer
 	read -p "Please make a Selection: " mainmenu_option
 	case $mainmenu_option in
-		1) clear && File_check BE && Kits && Create_esx-config && Continue && Mainmenu;;
-		2) clear && File_check BF && Kits && Create_fire-config && Continue && Mainmenu;; 
-		3) clear && File_check S && Kits && Create_switch_config && Continue && Mainmenu;;
+		1) clear && File_check BE && Kits && Create_esx-config && Set_User && Mainmenu;;
+		2) clear && File_check BF && Kits && Create_fire-config && Set_User && Mainmenu;; 
+		3) clear && File_check S && Kits && Create_switch_config && Set_User && Mainmenu;;
 		4) clear && File_check PB && Create_fire-base_file && Mainmenu;;
 		5) clear && File_check E && Create_esx-base_file && Mainmenu;;
-		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Continue && Mainmenu;;
+		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Set_User && Mainmenu;;
 		x|X) clear && exit ;;
 		*) echo "Invalid input" && sleep 1 && Mainmenu;;
 	esac
@@ -257,7 +257,7 @@ sed -i "s/vlanId\s=\s\"*[0-8]36\"/vlanId = \"136\"/g" $ESX_BASE_FILE  ### Correc
 sed -i "s/vlanId\s=\s\"*[0-8]37\"/vlanId = \"137\"/g" $ESX_BASE_FILE  ### Corrects the DMZ VLAN
 chown -f assessor $ESX_BASE_FILE
 echo "[+] Generated $ESX_BASE_FILE"
-Continue
+Set_User
 }
 #=======================
 Create_fire-base_file()
@@ -272,11 +272,11 @@ sed -i "s/10\.101\.37\.3/10\.101\.37\.1/g" $FIRE_BASE_FILE  ### Corrects the DMZ
 #sed -i '/<openvpn>/,/<\/openvpn>/{/<openvpn>/!{/\/openvpn>/!d}}' $FIRE_BASE_FILE
 chown -f assessor $FIRE_BASE_FILE
 echo "[+] Generated $FIRE_BASE_FILE"
-Continue
+Set_User
 }
 #
 #=======================
-Continue()
+Set_User()
 {
 echo ''
 echo ''
