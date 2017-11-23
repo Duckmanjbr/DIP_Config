@@ -7,4 +7,4 @@ Sensor_config.sh is used to setup any individual sensor configuration.
 
 
 
-create_switch_config.sh.bkp is outdated and has been integrated into DIP_config_generator.sh
+> create_switch_config.sh.bkp is outdated and has been integrated into DIP_config_generator.sh
