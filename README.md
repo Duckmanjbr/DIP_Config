@@ -1,5 +1,6 @@
 # DIP_Config
 DIP_config_generator.sh is the latest release of DIP configuration setup.
+
 Sensor_config.sh is used to setup any individual sensor configuration.
 
 
