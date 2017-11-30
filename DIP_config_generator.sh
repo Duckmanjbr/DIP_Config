@@ -51,11 +51,12 @@
 # https://github.com/Duckmanjbr/DIP_Config/blob/master/DIP_config_generator.sh
 #
 #####################################################
-#Variables
-SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4".  Only use one number!
+#Selectable Variables (user selected)
+SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
 SQD1NAME='Ravens'				### Sqd 1 name.
-SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3" or 834="4".  Only use one number!
+SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
 SQD2NAME='Warriors'				### Sqd 2 name.
+#
 #Base files will be stored in a parent folder labeled ESXi,Firewall,Switch,etc
 #Newly created configuration files will be created in a folder with the name of the kit configs created.  Ex: "Kit_5"
 FIRE_BASE_FILE='firewall.base.xml'              ### Baseline file to create all others from
@@ -65,7 +66,8 @@ ESX_BASE_FILE='esx.base.conf'                   ### Baseline file to create all 
 ESX_FILE='esx.conf'                             ### Name of config file to create
 SWITCH_BASE_FILE='Switch_101.master'            ### Baseline file to create all others from
 #
-#
+#####################################################
+#Script Variables
 KIT=''                                          ### Kit number (1-18)
 FILE=''                                         ### File being adjusted
 IP=''                                           ### IP octet of kit (101, 102, 103, etc)
