@@ -5,7 +5,7 @@
 #	File: DIP_config_generator.sh
 #	Name: Create DIP Configurations
 #
-	VERSION_NUM='3.1'
+	VERSION_NUM='3.2'
 # 	*Version is major.minor format
 # 	*Major is updated when new capability is added
 # 	*Minor is updated on fixes and improvements
@@ -35,6 +35,12 @@
 #		*Added squadron variables for ease of use between multiple sqds.
 #		*Other small bug fixes
 #
+#	29Nov2017 v3.2
+#		Dread Pirate
+#		*Minor bug fixes for name in switch config 
+#		*Error checking added for ESXi config
+#	
+#
 #Description 
 #=======================
 # This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
@@ -42,7 +48,7 @@
 #
 #Notes
 #=======================
-#
+# https://github.com/Duckmanjbr/DIP_Config/blob/master/DIP_config_generator.sh
 #
 #####################################################
 #Variables
@@ -64,7 +70,9 @@ KIT=''                                          ### Kit number (1-18)
 FILE=''                                         ### File being adjusted
 IP=''                                           ### IP octet of kit (101, 102, 103, etc)
 OPTION=''                                       ### Prompted question options
-CASENAME=({$SDQ1,$SQD2}{A,B,C}{1,2,3}A)         ### This Array contains the DIP cases for the switch names eg 3A1A, 6C2A, etc.
+CASESQD1=(${SQD1}{A,B,C}{1,2,3}A)               ### This Array contains the DIP cases for the SQD1 switch names eg 3A1A, 3C2A, etc.
+CASESQD2=(${SQD2}{A,B,C}{1,2,3}A)               ### This Array contains the DIP cases for the SQD2 switch names eg 6A1A, 6C2A, etc.
+CASENAME=("${CASESQD1[@]}" "${CASESQD2[@]}")    ### Array merge
 CASE=''                                         ### The Case name based from the kit number and the array.
 TUNNEL_IP_SOURCE=''                             ### Tunnel IPs
 TUNNEL_IP_DEST=''                               ### Tunnel IPs
@@ -125,12 +133,12 @@ Header
 Footer
 	read -p "Please make a Selection: " mainmenu_option
 	case $mainmenu_option in
-		1) clear && File_check BE && Kits && Create_esx-config && Set_User && Mainmenu;;
-		2) clear && File_check BF && Kits && Create_fire-config && Set_User && Mainmenu;; 
-		3) clear && File_check S && Kits && Create_switch_config && Set_User && Mainmenu;;
+		1) clear && File_check BE && Kits && Create_esx-config && Continue && Mainmenu;;
+		2) clear && File_check BF && Kits && Create_fire-config && Continue && Mainmenu;; 
+		3) clear && File_check S && Kits && Create_switch_config && Continue && Mainmenu;;
 		4) clear && File_check PB && Create_fire-base_file && Mainmenu;;
 		5) clear && File_check E && Create_esx-base_file && Mainmenu;;
-		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Set_User && Mainmenu;;
+		f|F) clear && File_check BE && File_check BF && File_check S && Kits && Create_switch_config && Create_fire-config && Create_esx-config && Continue && Mainmenu;;
 		x|X) clear && exit ;;
 		*) echo "Invalid input" && sleep 1 && Mainmenu;;
 	esac
@@ -162,6 +170,11 @@ read -p "You selected Kit ${IP}. Is this correct? [y/n]  " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]];then
 	KIT="$(($IP - 100))"
 	CASE="${CASENAME[$(($KIT - 1))]}"
+#test	echo ""
+#test	echo " ${CASESQD1[*]} "
+#test	echo " ${CASESQD2[*]} "
+#test	echo " All Casses= ${CASENAME[*]} "
+#test	echo " CASE= ${CASE} "
 else
 	clear
 	Kits
@@ -214,12 +227,15 @@ Create_esx-config()
 #Restore:
 # vim-cmd hostsvc/maintenance_mode_enter
 # vim-cmd hostsvc/firmware/restore_config 1 /tmp/configBundle.tgz
-read -p "Are you setting up primary ESXi or secondary? (p/s)  " OPTION
-mkdir -p Kit_${KIT}
-if [[ $OPTION = "p" ]];then
+read -p "Are you setting up primary ESXi or secondary? (p/s)  " -n 1 -r
+if [[ $REPLY =~ ^[Pp]$ ]];then
+	mkdir -p Kit_${KIT}
 	sed -r "s/10\.101\./10\.${IP}\./g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
-elif [[ $OPTION = "s" ]];then
-        sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+elif [[ $REPLY =~ ^[Ss]$ ]];then
+        mkdir -p Kit_${KIT}
+	sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+else 
+	Create_esx-config
 fi
 sed -i "s/132/${KIT}32/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Management VLAN
 sed -i "s/134/${KIT}34/g" Kit_${KIT}/$ESX_FILE  ### Corrects the VoIP VLAN
@@ -257,7 +273,7 @@ sed -i "s/vlanId\s=\s\"*[0-8]36\"/vlanId = \"136\"/g" $ESX_BASE_FILE  ### Correc
 sed -i "s/vlanId\s=\s\"*[0-8]37\"/vlanId = \"137\"/g" $ESX_BASE_FILE  ### Corrects the DMZ VLAN
 chown -f assessor $ESX_BASE_FILE
 echo "[+] Generated $ESX_BASE_FILE"
-Set_User
+Continue
 }
 #=======================
 Create_fire-base_file()
@@ -272,11 +288,11 @@ sed -i "s/10\.101\.37\.3/10\.101\.37\.1/g" $FIRE_BASE_FILE  ### Corrects the DMZ
 #sed -i '/<openvpn>/,/<\/openvpn>/{/<openvpn>/!{/\/openvpn>/!d}}' $FIRE_BASE_FILE
 chown -f assessor $FIRE_BASE_FILE
 echo "[+] Generated $FIRE_BASE_FILE"
-Set_User
+Continue
 }
 #
 #=======================
-Set_User()
+Continue()
 {
 echo ''
 echo ''
