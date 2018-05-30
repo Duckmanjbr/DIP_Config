@@ -49,6 +49,7 @@
 #Notes
 #=======================
 # https://github.com/Duckmanjbr/DIP_Config/blob/master/DIP_config_generator.sh
+# Cisco IOS version must be greater than v3.58  Some commands in config don't exist on older IOS versions.
 #
 #####################################################
 #Selectable Variables (user selected)
