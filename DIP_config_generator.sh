@@ -288,7 +288,6 @@ sed -i "s/10\.101\.34\.3/10\.101\.34\.1/g" $FIRE_BASE_FILE  ### Corrects the VoI
 sed -i "s/10\.101\.35\.3/10\.101\.35\.1/g" $FIRE_BASE_FILE  ### Corrects the Internal VLAN
 sed -i "s/10\.101\.36\.3/10\.101\.36\.1/g" $FIRE_BASE_FILE  ### Corrects the External VLAN
 sed -i "s/10\.101\.37\.3/10\.101\.37\.1/g" $FIRE_BASE_FILE  ### Corrects the DMZ VLAN
-#sed -i '/<openvpn>/,/<\/openvpn>/{/<openvpn>/!{/\/openvpn>/!d}}' $FIRE_BASE_FILE
 chown -f assessor $FIRE_BASE_FILE
 echo "[+] Generated $FIRE_BASE_FILE"
 Continue
@@ -304,15 +303,6 @@ read -p '[Press Enter to continue] '
 }
 #
 #=======================
-Tunnel_Config() 
-{
-#Needs work if needed at all?
-sed -i 's/interface Tunnel.*/interface Tunnel'"${KIT}"'/g' Kit_${KIT}/Switch_${IP}
-sed -i 's/ip address 10\.10\.10\..* 255\.255\.255\.252/ip address 10\.10\.10\.'"$TUNNEL_IP_SOURCE"' 255.255.255.252/g' Kit_${KIT}/Switch_${IP}
-sed -i 's/tunnel destination 10\.10\.10\..*/tunnel destination 10\.10\.10\.'"$TUNNEL_IP_DEST"'/g' Kit_${KIT}/Switch_${IP}
-}
-#
-#=======================
 Create_switch_config()
 {
 mkdir -p Kit_${KIT}	
@@ -325,9 +315,6 @@ sed -i "s/134/"${KIT}"34/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 134 wi
 sed -i "s/135/"${KIT}"35/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 135 with the appropriate switch VLAN.		
 sed -i "s/136/"${KIT}"36/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 136 with the appropriate switch VLAN.		
 sed -i "s/137/"${KIT}"37/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 137 with the appropriate switch VLAN.
-#TUNNEL_IP_SOURCE=$(expr 4 \* ${IP} - 2)
-#TUNNEL_IP_DEST=$(expr $TUNNEL_IP_SOURCE - 1)
-#Tunnel_Config
 echo ''
 echo "[+] Generated Switch_${IP}"
 }
