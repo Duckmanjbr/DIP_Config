@@ -27,7 +27,7 @@
 #	
 #Description 
 #============================
-# This script is designed to be run after PMO initial Ghost image of sensor. It loads all the differences needed by N-CPT kit design. 
+# This script is designed to be run after PMO initial Ghost image of sensor. It loads all the differences needed for kit design. 
 #
 #
 #Notes
