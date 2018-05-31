@@ -77,8 +77,6 @@ CASESQD1=(${SQD1}{A,B,C}{1,2,3}A)               ### This Array contains the DIP 
 CASESQD2=(${SQD2}{A,B,C}{1,2,3}A)               ### This Array contains the DIP cases for the SQD2 switch names eg 6A1A, 6C2A, etc.
 CASENAME=("${CASESQD1[@]}" "${CASESQD2[@]}")    ### Array merge
 CASE=''                                         ### The Case name based from the kit number and the array.
-TUNNEL_IP_SOURCE=''                             ### Tunnel IPs
-TUNNEL_IP_DEST=''                               ### Tunnel IPs
 
 #####################################################
 #Functions:
