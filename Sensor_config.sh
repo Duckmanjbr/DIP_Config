@@ -5,7 +5,7 @@
 #	File: sensor_config.sh
 #	Name: Sensor setup and configuration
 #
-#	VERSION_NUM='1.2'
+#	VERSION_NUM='1.3'
 # 	*version is major.minor format
 # 	*major is updated when new capability is added
 # 	*minor is updated on fixes and improvements
@@ -16,7 +16,6 @@
 #		Dread Pirate
 #		*initial build
 #
-#
 #	14Jul2017 v1.1
 #		Sgt. Mills
 #		*added NTP support for sensors
@@ -25,6 +24,10 @@
 #		Dread Pirate
 #		*Minor bug fixes
 #	
+#	01Jun2018 v1.3
+#		Dread Pirate
+#		*added full routing for the sensor through the kit
+#
 #Description 
 #============================
 # This script is designed to be run after PMO initial Ghost image of sensor. It loads all the differences needed for kit design. 
@@ -100,7 +103,6 @@ for i in $INTERFACE_1 $INTERFACE_2; do
 		if [[ $i == $INTERFACE_1 ]]; then
 			echo 'BOOTPROTO="dhcp"' >> ifcfg-$i
 			echo 'DEVICE="eno1"' >> ifcfg-$i
-			echo 'PEERDNS="no"' >> ifcfg-$i
 			echo 'NAME="eno1"' >> ifcfg-$i
 			echo 'DEVICE="eno1"' >> ifcfg-$i
 			echo "Creating new file ${i} for dynamic config..."
@@ -109,7 +111,6 @@ for i in $INTERFACE_1 $INTERFACE_2; do
 			echo 'IPADDR=10.0.0.1' >> ifcfg-$i
 			echo 'PREFIX=24' >> ifcfg-$i
 			echo 'DEVICE="eno2"' >> ifcfg-$i
-			echo 'PEERDNS="no"' >> ifcfg-$i
 			echo 'NAME="eno2"' >> ifcfg-$i
 			echo 'DEVICE="eno2"' >> ifcfg-$i
 			echo "Creating new file ${i} for staic config..."
@@ -128,7 +129,6 @@ for i in $INTERFACE_1 $INTERFACE_2; do
 			if ( cat /etc/sysconfig/network-scripts/ifcfg-$i |grep IPADDR > /dev/null ); then
 				sed -i "/.*IPADDR=*/d" ifcfg-$i
 				sed -i "/.*PREFIX=*/d" ifcfg-$i
-				sed -i "s/.*PEERDNS=\"yes\"/PEERDNS=\"no\"/" ifcfg-$i
 			fi
 			echo "Changing file ${i} for dynamic config..."
 		#If the file is for the 2nd interface:
@@ -139,11 +139,9 @@ for i in $INTERFACE_1 $INTERFACE_2; do
 				sed -i "/.*PREFIX=*/d" ifcfg-$i
 				echo 'IPADDR=10.0.0.1' >> ifcfg-$i
 				echo 'PREFIX=24' >> ifcfg-$i
-				sed -i "s/.*PEERDNS=\"yes\"/PEERDNS=\"no\"/" ifcfg-$i
 			else
 				echo 'IPADDR=10.0.0.1' >> ifcfg-$i
 				echo 'PREFIX=24' >> ifcfg-$i
-				sed -i "s/.*PEERDNS=\"yes\"/PEERDNS=\"no\"/" ifcfg-$i
 			fi
 			echo "Changing file ${i} for staic config..."
 		else
