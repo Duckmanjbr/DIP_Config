@@ -5,14 +5,14 @@
 #	File: DIP_config_generator.sh
 #	Name: Create DIP Configurations
 #
-	VERSION_NUM='3.2'
+	VERSION_NUM='3.3'
 # 	*Version is major.minor format
 # 	*Major is updated when new capability is added
 # 	*Minor is updated on fixes and improvements
 #
 #History
-#=======================		
-#	20Jun2017 v1.0 
+#=======================
+#	20Jun2017 v1.0
 #		Dread Pirate
 #		*Created from starter script designed by 836 to auto create firewall scripts
 #
@@ -24,11 +24,11 @@
 #		Dread Pirate
 #		*HAPPY B-DAY USA!  MERICA!
 #		*Got really bored.  Added ESXi network backup/restore functionality.
-#		*Added full menu system 
+#		*Added full menu system
 #
 #	11Jul2017 v3.0
 #		Dread Pirate
-#		*Incorporated switch config creation to start streamlining the process. 
+#		*Incorporated switch config creation to start streamlining the process.
 #
 #	22Nov2017 v3.1
 #		Dread Pirate
@@ -37,13 +37,17 @@
 #
 #	29Nov2017 v3.2
 #		Dread Pirate
-#		*Minor bug fixes for name in switch config 
+#		*Minor bug fixes for name in switch config
 #		*Error checking added for ESXi config
-#	
 #
-#Description 
+# 0120Jun2018
+#   Matt Riensch - Mission Services Incorporated
+#    *Added Prompts for the Following Variables
+#    *SQD1,SQD1NAME,SQD2,SQD2NAME
+#
+#Description
 #=======================
-# This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
+# This script changes thex IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
 # This will allow two Sqds (18 kits) to use the same backbone infrastructure in parallel while maintaining kit isolation by VLAN.
 #
 #Notes
@@ -53,6 +57,7 @@
 #
 #####################################################
 #Selectable Variables (user selected)
+#These Values get overwirtten in SQDINFO
 SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
 SQD1NAME='Ravens'				### Sqd 1 name.
 SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
@@ -100,7 +105,7 @@ Header()
 	echo "+                  DIP Configuration Setup Script $VERSION_NUM                  +"
 	echo "+                                                                      +"
 	echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	echo "+                                                                      +"
+
 
 }
 #=======================
@@ -112,10 +117,36 @@ Footer()
 	echo ""
 }
 #=======================
+#This function will prompt for SQD Info
+SQDINFO()
+{
+clear
+Header
+echo ''
+echo "Set Squad 1's Number Single digit number for Sqd identifier."
+read -p "Ex: 833="3", 834="4", etc.  Only use one number! " SQD1
+#Check for 1 digit
+while [[ $(echo $SQD1) -ge 10 ]]; do
+	read -p "$SQD1 is not a single Digit, Please use a single digit: " SQD1
+done
+echo ""
+read -p "Set Squad 1's Name " SQD1NAME
+echo ""
+echo "Set Squad 2's Number Single digit number for Sqd identifier."
+read -p "Ex: 833="3", 834="4", etc.  Only use one number! " SQD2
+#Check for 1 Digit
+while [[ $(echo $SQD2) -ge 10 ]]; do
+	read -p "$SQD2 is not a single Digit, Please use a single digit: " SQD2
+done
+echo ""
+read -p "Set Squad 2's Name " SQD2NAME
+}
+#=======================
 Mainmenu()
 {
 	clear
 Header
+	echo "+                                                                      +"
 	echo "+        [ 1 ] Create ESXi config for single kit                       +"
 	echo "+                                                                      +"
 	echo "+        [ 2 ] Create Firewall config for single kit                   +"
@@ -135,7 +166,7 @@ Footer
 	read -p "Please make a Selection: " mainmenu_option
 	case $mainmenu_option in
 		1) clear && File_check BE && Kits && Create_esx-config && Continue && Mainmenu;;
-		2) clear && File_check BF && Kits && Create_fire-config && Continue && Mainmenu;; 
+		2) clear && File_check BF && Kits && Create_fire-config && Continue && Mainmenu;;
 		3) clear && File_check S && Kits && Create_switch_config && Continue && Mainmenu;;
 		4) clear && File_check PB && Create_fire-base_file && Mainmenu;;
 		5) clear && File_check E && Create_esx-base_file && Mainmenu;;
@@ -148,6 +179,7 @@ Footer
 Kits()
 {
 Header
+	echo "+                                                                      +"
 	echo "+        Kit numbers are designed and configured per flight            +"
 	echo "+    This number schema repeats throughout the kits and networks       +"
 	echo "+                                                                      +"
@@ -204,7 +236,7 @@ elif [ -z $1 ];then
 	echo "There was an error on file checking. Argument is empty."
 	sleep 1
 	exit
-else 
+else
 	echo "There was an error....  The option seen was ($1)"
 fi
 echo "File being checked:  $FILE"
@@ -223,7 +255,7 @@ Create_esx-config()
 #
 #Full server backup/restore can be done from cmdline.
 #Backup:
-# vim-cmd hostsvc/firmware/backup_config 
+# vim-cmd hostsvc/firmware/backup_config
 #saved in: /scratch/downloads
 #Restore:
 # vim-cmd hostsvc/maintenance_mode_enter
@@ -235,7 +267,7 @@ if [[ $REPLY =~ ^[Pp]$ ]];then
 elif [[ $REPLY =~ ^[Ss]$ ]];then
         mkdir -p Kit_${KIT}
 	sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
-else 
+else
 	Create_esx-config
 fi
 sed -i "s/132/${KIT}32/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Management VLAN
@@ -243,7 +275,7 @@ sed -i "s/134/${KIT}34/g" Kit_${KIT}/$ESX_FILE  ### Corrects the VoIP VLAN
 sed -i "s/135/${KIT}35/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Internal VLAN
 sed -i "s/136/${KIT}36/g" Kit_${KIT}/$ESX_FILE  ### Corrects the External VLAN
 sed -i "s/137/${KIT}37/g" Kit_${KIT}/$ESX_FILE  ### Corrects the DMZ VLAN
-echo '' 
+echo ''
 echo '[+] Generated esx.conf'
 echo ''
 echo 'This new esx.conf file must be copied into the server.  '
@@ -303,15 +335,15 @@ read -p '[Press Enter to continue] '
 #=======================
 Create_switch_config()
 {
-mkdir -p Kit_${KIT}	
+mkdir -p Kit_${KIT}
 cp Switch/$SWITCH_BASE_FILE Kit_${KIT}/Switch_${IP}
 sed -i "s/10\.101/10\.${IP}/g" Kit_${KIT}/Switch_${IP}
 echo ''
 sed -i "s/DIP_101_.*/DIP_${IP}_${CASE}/g" Kit_${KIT}/Switch_${IP} ###Sets hostname by IP/DIP case.
-sed -i "s/132/"${KIT}"32/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 132 with the appropriate switch VLAN.		
+sed -i "s/132/"${KIT}"32/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 132 with the appropriate switch VLAN.
 sed -i "s/134/"${KIT}"34/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 134 with the appropriate switch VLAN.
-sed -i "s/135/"${KIT}"35/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 135 with the appropriate switch VLAN.		
-sed -i "s/136/"${KIT}"36/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 136 with the appropriate switch VLAN.		
+sed -i "s/135/"${KIT}"35/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 135 with the appropriate switch VLAN.
+sed -i "s/136/"${KIT}"36/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 136 with the appropriate switch VLAN.
 sed -i "s/137/"${KIT}"37/g" Kit_${KIT}/Switch_${IP} ###This replaces VLAN 137 with the appropriate switch VLAN.
 echo ''
 echo "[+] Generated Switch_${IP}"
@@ -322,4 +354,5 @@ echo "[+] Generated Switch_${IP}"
 #
 #
 Checkroot
+SQDINFO
 Mainmenu
