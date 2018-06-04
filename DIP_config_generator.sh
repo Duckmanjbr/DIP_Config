@@ -42,8 +42,8 @@
 #
 # 0120Jun2018
 #   Matt Riensch - Mission Services Incorporated
-#    *Added Prompts for the Following Variables
-#    *SQD1,SQD1NAME,SQD2,SQD2NAME
+#    *Added Checks for the Following Variables, and removed defaults
+#    *SQD1 and SQD2
 #
 #Description
 #=======================
@@ -58,10 +58,10 @@
 #####################################################
 #Selectable Variables (user selected)
 #These Values get overwirtten in SQDINFO
-SQD1='3'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
-SQD1NAME='Ravens'				### Sqd 1 name.
-SQD2='6'					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
-SQD2NAME='Warriors'				### Sqd 2 name.
+SQD1= 					### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
+SQD1NAME=				### Sqd 1 name.
+SQD2=		   			### Single digit number for Sqd identifier.  Ex: 833="3", 834="4", etc.  Only use one number!
+SQD2NAME=				### Sqd 2 name.
 #
 #Base files will be stored in a parent folder labeled ESXi,Firewall,Switch,etc
 #Newly created configuration files will be created in a folder with the name of the kit configs created.  Ex: "Kit_5"
@@ -122,24 +122,15 @@ SQDINFO()
 {
 clear
 Header
-echo ''
-echo "Set Squad 1's Number Single digit number for Sqd identifier."
-read -p "Ex: 833="3", 834="4", etc.  Only use one number! " SQD1
-#Check for 1 digit
-while [[ $(echo $SQD1) -ge 10 ]]; do
-	read -p "$SQD1 is not a single Digit, Please use a single digit: " SQD1
+echo ""
+#Check for SQD Numbers
+for number in $(echo "SQD1 SQD2"); do
+	if [[ ! $(echo "${number}") -ge 1 ]]; then
+		echo "variable: ${number} is empty, please edit the script"
+		echo ""
+		exit 1
+	fi
 done
-echo ""
-read -p "Set Squad 1's Name " SQD1NAME
-echo ""
-echo "Set Squad 2's Number Single digit number for Sqd identifier."
-read -p "Ex: 833="3", 834="4", etc.  Only use one number! " SQD2
-#Check for 1 Digit
-while [[ $(echo $SQD2) -ge 10 ]]; do
-	read -p "$SQD2 is not a single Digit, Please use a single digit: " SQD2
-done
-echo ""
-read -p "Set Squad 2's Name " SQD2NAME
 }
 #=======================
 Mainmenu()
