@@ -47,7 +47,7 @@
 #
 #Description
 #=======================
-# This script changes thex IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
+# This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
 # This will allow two Sqds (18 kits) to use the same backbone infrastructure in parallel while maintaining kit isolation by VLAN.
 #
 #Notes
