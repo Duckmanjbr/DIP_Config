@@ -5,7 +5,7 @@
 #	File: DIP_config_generator.sh
 #	Name: Create DIP Configurations
 #
-	VERSION_NUM='3.3'
+	VERSION_NUM='3.4'
 # 	*Version is major.minor format
 # 	*Major is updated when new capability is added
 # 	*Minor is updated on fixes and improvements
@@ -45,6 +45,10 @@
 #    *Added Checks for the Following Variables, and removed defaults
 #    *SQD1 and SQD2
 #
+# 13Aug2018
+#		Kalub
+#			*Modified Create_esx-config() to make vmk0 Management interface
+#			*Modified Create_esx-config() to assign kit Management IP
 #Description
 #=======================
 # This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
@@ -266,6 +270,9 @@ sed -i "s/134/${KIT}34/g" Kit_${KIT}/$ESX_FILE  ### Corrects the VoIP VLAN
 sed -i "s/135/${KIT}35/g" Kit_${KIT}/$ESX_FILE  ### Corrects the Internal VLAN
 sed -i "s/136/${KIT}36/g" Kit_${KIT}/$ESX_FILE  ### Corrects the External VLAN
 sed -i "s/137/${KIT}37/g" Kit_${KIT}/$ESX_FILE  ### Corrects the DMZ VLAN
+sed -i "s/\/adv\/Net\/ManagementIface = \"vmk1\"/\/adv\/Net\/ManagementIface = \"vmk0\"/g" Kit_${KIT}/$ESX_FILE ### Sets Management Interface to vmk0
+sed -i "s/\/adv\/Net\/ManagementAddr = \"10.0.0.1\"/\/adv\/Net\/ManagementAddr = \"10.${IP}.32.2\"/g" Kit_${KIT}/$ESX_FILE ### Sets Management IP to 10.X.32.2 (Mgmt VLAN)
+sed -i "s/\/adv\/Misc\/HostIPAddr = \"10.0.0.1\"/\/adv\/Misc\/HostIPAddr = \"10.${IP}.32.2\"/g" Kit_${KIT}/$ESX_FILE ### Sets Management IP to 10.X.32.2 (Mgmt VLAN)
 echo ''
 echo '[+] Generated esx.conf'
 echo ''
