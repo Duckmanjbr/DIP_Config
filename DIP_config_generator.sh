@@ -261,7 +261,7 @@ if [[ $REPLY =~ ^[Pp]$ ]];then
 elif [[ $REPLY =~ ^[Ss]$ ]];then
         mkdir -p Kit_${KIT}
 	sed -r -e "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" \
-	-e "s/(\/net/\w+\/child\[0000\]\/mac \= )\"([0-9a-f]{2}:){5}([0-9a-f]{2})\"/\1\"70:10:6f:ac:84:ac\"/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+	-e "s/(\/net\/\w+\/child\[0000\]\/mac \= )\"([0-9a-f]{2}:){5}([0-9a-f]{2})\"/\1\"70:10:6f:ac:84:ac\"/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
 else
 	Create_esx-config
 fi
