@@ -40,11 +40,14 @@
 #		*Minor bug fixes for name in switch config
 #		*Error checking added for ESXi config
 #
-# 0120Jun2018
-#   Matt Riensch - Mission Services Incorporated
-#    *Added Checks for the Following Variables, and removed defaults
-#    *SQD1 and SQD2
+#	0120Jun2018
+#   		Matt Riensch - Mission Services Incorporated
+#    		*Added Checks for the Following Variables, and removed defaults
+#    		*SQD1 and SQD2
 #
+#	17Dec2018
+#		Robert Legg - 42 COS
+#		*Prevents primary and secondary ESXis from getting the same MAC
 #Description
 #=======================
 # This script changes the IPs/VLANs of the baseline files to allow dynamic build-out of multiple configuration files for each different kit.
@@ -257,7 +260,8 @@ if [[ $REPLY =~ ^[Pp]$ ]];then
 	sed -r "s/10\.101\./10\.${IP}\./g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
 elif [[ $REPLY =~ ^[Ss]$ ]];then
         mkdir -p Kit_${KIT}
-	sed -r "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
+	sed -r -e "s/10\.101\.32\.2/10\.${IP}\.32\.4/g" \
+	-e "s/(\/net\/\w+\/child\[0000\]\/mac \= )\"([0-9a-f]{2}:){5}([0-9a-f]{2})\"/\1\"70:10:6f:ac:84:ac\"/g" ESXi/$ESX_BASE_FILE > Kit_${KIT}/$ESX_FILE
 else
 	Create_esx-config
 fi
